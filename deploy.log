@@ -1,0 +1,179 @@
+  Building...
+
+> talent-os@0.1.0 build
+> next build
+
+▲ Next.js 16.2.0 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 24.8s
+  Running TypeScript ...
+  Finished TypeScript in 36.6s ...
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/29) ...
+Automatic initialization failed. Falling back to firebase config object. Error [FirebaseError]: Firebase: Need to provide options, when not being deployed to hosting via source. (app/no-options).
+    at a0 (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:1:24441)
+    at W (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:13:2593)
+    at <unknown> (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:12:79634)
+    at v (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:12:79629) {
+  code: 'app/no-options',
+  customData: {}
+}
+Automatic initialization failed. Falling back to firebase config object. Error [FirebaseError]: Firebase: Need to provide options, when not being deployed to hosting via source. (app/no-options).
+    at a0 (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:1:24441)
+    at W (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:13:2593)
+    at <unknown> (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:12:79634)
+    at v (C:\dev\TalentOS\.next\server\chunks\ssr\_07uqg7p._.js:12:79629) {
+  code: 'app/no-options',
+  customData: {}
+}
+  Generating static pages using 15 workers (7/29) 
+  Generating static pages using 15 workers (14/29) 
+  Generating static pages using 15 workers (21/29) 
+✓ Generating static pages using 15 workers (29/29) in 1378ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /api/create-payment-intent
+├ ƒ /api/stripe/billing-portal
+├ ƒ /api/stripe/create-checkout-session
+├ ƒ /api/webhooks/stripe
+├ ○ /blog
+├ ƒ /blog/[slug]
+├ ○ /candidate/big-five-test
+├ ○ /candidate/matches
+├ ○ /candidate/mbti-test
+├ ○ /candidate/messages
+├ ○ /candidate/profile
+├ ○ /candidate/verify-skills
+├ ○ /community/forum
+├ ƒ /community/forum/[postId]
+├ ○ /community/forum/new-post
+├ ○ /dashboard
+├ ○ /employer/jobs
+├ ○ /employer/jobs/new
+├ ○ /employer/messages
+├ ○ /employer/profile
+├ ○ /jobs
+├ ○ /login
+├ ƒ /messages/[chatId]
+├ ○ /onboarding
+├ ○ /pricing
+├ ○ /privacy
+├ ○ /resources
+├ ○ /robots.txt
+├ ○ /settings
+├ ○ /sitemap.xml
+└ ○ /terms
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+  Build OK
+  Deploying...
+(node:47520) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+No Firebase app associated with site veiled-ventures, injecting project default config.
+  You can link a Web app to a Hosting site here https://console.firebase.google.com/project/veiled-ventures/settings/general/web
+
+   Thank you for trying our [3mearly preview[23m of Next.js support on Firebase Hosting.
+   [31mDuring the preview, support is best-effort and breaking changes can be expected. Proceed with caution.[39m[33m
+   The integration is known to work with Next.js version [3m12 - 15.0[23m. You may encounter errors.[39m
+
+   [1mDocumentation:[22m https://firebase.google.com/docs/hosting/frameworks/nextjs
+   [1mFile a bug:[22m https://github.com/firebase/firebase-tools/issues/new?template=bug_report.md
+   [1mSubmit a feature request:[22m https://github.com/firebase/firebase-tools/issues/new?template=feature_request.md
+
+   We'd love to learn from you. Express your interest in helping us shape the future of Firebase Hosting: https://goo.gle/41enW5X
+
+▲ Next.js 16.2.0 (Turbopack)
+
+- Environments: .env.local
+
+
+  Creating an optimized production build ...
+
+✓ Compiled successfully in 27.9s
+
+  Running TypeScript ...
+
+  Finished TypeScript in 42s ...
+
+  Collecting page data using 15 workers ...
+
+  Generating static pages using 15 workers (0/29) ...
+
+  Generating static pages using 15 workers (7/29) 
+
+  Generating static pages using 15 workers (14/29) 
+
+  Generating static pages using 15 workers (21/29) 
+
+✓ Generating static pages using 15 workers (29/29) in 1616ms
+
+  Finalizing page optimization ...
+
+
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /api/create-payment-intent
+├ ƒ /api/stripe/billing-portal
+├ ƒ /api/stripe/create-checkout-session
+├ ƒ /api/webhooks/stripe
+├ ○ /blog
+├ ƒ /blog/[slug]
+├ ○ /candidate/big-five-test
+├ ○ /candidate/matches
+├ ○ /candidate/mbti-test
+├ ○ /candidate/messages
+├ ○ /candidate/profile
+├ ○ /candidate/verify-skills
+├ ○ /community/forum
+├ ƒ /community/forum/[postId]
+├ ○ /community/forum/new-post
+├ ○ /dashboard
+├ ○ /employer/jobs
+├ ○ /employer/jobs/new
+├ ○ /employer/messages
+├ ○ /employer/profile
+├ ○ /jobs
+├ ○ /login
+├ ƒ /messages/[chatId]
+├ ○ /onboarding
+├ ○ /pricing
+├ ○ /privacy
+├ ○ /resources
+├ ○ /robots.txt
+├ ○ /settings
+├ ○ /sitemap.xml
+└ ○ /terms
+
+
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+Building a Cloud Function to run this application. This is needed due to:
+ • non-static component /api/create-payment-intent/route
+ • non-static component /api/stripe/billing-portal/route
+ • non-static component /api/stripe/create-checkout-session/route
+ • non-static component /api/webhooks/stripe/route
+ • non-static component /blog/[slug]/page
+ • and 2 other reasons, use --debug to see more
+
+
+[1m[31mError:[39m[22m An unexpected error has occurred.
+  FAIL: deploy failed
+
+--- local-toolbox-calc (local-toolbox-calc) ---

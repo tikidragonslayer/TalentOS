@@ -1,0 +1,30 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "jobListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "depositAmount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "jobListings",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "hiringMode", "order": "ASCENDING" },
+        { "fieldPath": "depositAmount", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "matchScores",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "userProfileId", "order": "ASCENDING" },
+        { "fieldPath": "score", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

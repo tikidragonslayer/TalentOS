@@ -1,0 +1,185 @@
+/**
+ * @fileoverview Firestore Security Rules for Veiled Ventures (TalentOS).
+ *
+ * Core Philosophy:
+ * Strict user-ownership for profiles, company-based ownership for jobs,
+ * participant-based access for conversations/messages/reveals, and
+ * authenticated access for community features.
+ *
+ * Security Model:
+ * - Conversations: participant-only access via participantIds array
+ * - Messages: read gated by parent conversation membership; writes via server actions only
+ * - Reveal requests: participant-only access via participantIds denormalized field
+ * - Forum: authenticated read, author-only write
+ * - All mutations for conversations/messages/reveals go through server actions (firebase-admin)
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+    }
+
+    // Helper: check if user is a participant in a conversation
+    function isConversationParticipant(conversationId) {
+      let conv = get(/databases/$(database)/documents/conversations/$(conversationId));
+      return conv != null && request.auth.uid in conv.data.participantIds;
+    }
+
+    // ── User documents (top-level) ──────────────────────────────
+    // The user-context reads /users/{userId} directly for role + profile data
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // ── User profile subcollection ──────────────────────────────
+    match /users/{userId}/profile {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    function isEmployerForCompany(companyId) {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return isSignedIn() && userDoc != null && userDoc.data.role == 'employer' && userDoc.data.companyId == companyId;
+    }
+
+    // ── Job listings ────────────────────────────────────────────
+    match /jobListings/{jobListingId} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isAdmin() || isEmployerForCompany(request.resource.data.companyId);
+      allow update: if isAdmin() || (resource != null && isEmployerForCompany(resource.data.companyId));
+      allow delete: if isAdmin() || (resource != null && isEmployerForCompany(resource.data.companyId));
+    }
+
+    // ── Companies ───────────────────────────────────────────────
+    match /companies/{companyId} {
+      allow get: if true;
+      allow list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update: if isAdmin() || isEmployerForCompany(companyId);
+      allow delete: if isAdmin();
+    }
+
+    // ── Match scores ────────────────────────────────────────────
+    // Only the candidate can read their own match scores.
+    // Client queries MUST filter by where('userProfileId', '==', authUser.id).
+    match /matchScores/{matchScoreId} {
+      allow get: if isSignedIn() && resource.data.userProfileId == request.auth.uid;
+      allow list: if isSignedIn() && request.auth.uid == resource.data.userProfileId;
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Conversations ───────────────────────────────────────────
+    // Participants can read their own conversations.
+    // Client queries with where('participantIds', 'array-contains', authUser.id).
+    match /conversations/{conversationId} {
+      allow get: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Messages (subcollection of conversations) ───────────────
+    // Read: must be a participant of the parent conversation.
+    // Write: server actions only — no client-side message creation.
+    match /conversations/{conversationId}/messages/{messageId} {
+      allow get, list: if isSignedIn() && isConversationParticipant(conversationId);
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Reveal requests ─────────────────────────────────────────
+    // Contains participantIds array (denormalized from conversation).
+    // Participants can read; all mutations via server actions.
+    match /revealRequests/{requestId} {
+      allow get: if isSignedIn() &&
+        (resource.data.requesterId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow list: if isSignedIn() &&
+        (resource.data.requesterId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Forum posts ─────────────────────────────────────────────
+    match /forumPosts/{postId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
+      allow delete: if (isSignedIn() && resource.data.authorId == request.auth.uid) || isAdmin();
+
+      // ── Forum replies (subcollection) ───────────────────────
+      match /replies/{replyId} {
+        allow get, list: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.authorId == request.auth.uid;
+        allow delete: if (isSignedIn() && resource.data.authorId == request.auth.uid) || isAdmin();
+      }
+    }
+
+    // ── Platform Fee Payments (server-only via webhook) ──────────
+    match /platform_fee_payments/{paymentId} {
+      allow get: if isSignedIn() && resource.data.firebaseUserId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.firebaseUserId == request.auth.uid;
+      allow create, update, delete: if false;  // Server actions only (webhook)
+    }
+
+    // ── Offers ──────────────────────────────────────────────────────
+    // Participants of the related conversation can read offers.
+    // All mutations via server actions (offer-actions.ts).
+    // participantIds array is denormalized from conversation for list queries.
+    match /offers/{offerId} {
+      allow get: if isSignedIn() &&
+        (resource.data.employerId == request.auth.uid || resource.data.candidateId == request.auth.uid
+         || request.auth.uid in resource.data.participantIds);
+      allow list: if isSignedIn() && request.auth.uid in resource.data.participantIds;
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Commitment Agreements ─────────────────────────────────────
+    match /commitment_agreements/{agreementId} {
+      allow get: if isSignedIn() &&
+        (resource.data.employerId == request.auth.uid || resource.data.candidateId == request.auth.uid);
+      allow list: if isSignedIn() &&
+        (resource.data.employerId == request.auth.uid || resource.data.candidateId == request.auth.uid);
+      allow create, update, delete: if false;  // Server actions only
+    }
+
+    // ── Stripe Events (idempotency log, server-only) ──────────────
+    match /stripe_events/{eventId} {
+      allow get, list, create, update, delete: if false;  // Server only
+    }
+
+    // ── Legacy Deposits (deprecated — no client access) ─────────
+    match /deposits/{depositId} {
+      allow get, list: if false;
+      allow create, update, delete: if false;
+    }
+
+    // ── Admin roles ─────────────────────────────────────────────
+    match /roles_admin/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if false;
+      allow create: if isAdmin();
+      allow update: if isAdmin() && resource != null;
+      allow delete: if isAdmin() && resource != null;
+    }
+  }
+}

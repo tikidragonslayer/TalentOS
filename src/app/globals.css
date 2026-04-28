@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Cosmic Glass Palette - Light Mode (Default but darker) */
+    --background: 220 30% 96%; /* Soft Blue-Grey */
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Brand Colors - deeply saturated neon teal */
+    --primary: 180 100% 25%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 180 100% 25%;
+    --accent-foreground: 222 47% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 180 100% 25%;
+
+    --radius: 1rem; /* Softer, larger radius */
+
+    /* Glass Variables */
+    --glass-background: 255 255 255;
+    --glass-border: 255 255 255;
+    --glass-opacity: 0.1;
+    --glass-blur: 16px;
+  }
+
+  .dark {
+    /* Cosmic Glass Palette - Dark Mode (The Real Deal) */
+    --background: 222 47% 5%; /* Very dark deep blue/black */
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 170 100% 50%; /* Neon Teal */
+    --primary-foreground: 222 47% 5%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 170 100% 50%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 170 100% 50%;
+    
+    /* Glass Variables Dark */
+    --glass-background: 0 0 0;
+    --glass-border: 255 255 255;
+    --glass-opacity: 0.4;
+    --glass-blur: 24px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-primary-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-background/60 backdrop-blur-xl border border-white/10 dark:border-white/5 shadow-xl;
+  }
+  
+  .glass-card-hover {
+    @apply transition-all duration-300 hover:scale-[1.02] hover:bg-white/5 hover:border-white/20 hover:shadow-2xl hover:shadow-primary/20;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60;
+  }
+
+  .text-gradient-primary {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-teal-400 to-emerald-400;
+  }
+}
+
