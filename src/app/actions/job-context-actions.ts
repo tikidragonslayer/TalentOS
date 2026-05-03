@@ -3,6 +3,7 @@
 import { db, auth } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { CREDIT_COSTS } from '@/lib/credit-costs';
+import { extractJobContext } from '@/ai/flows/extract-job-context';
 
 export interface JobContextResult {
     cultureAnalysis: string;
@@ -64,42 +65,34 @@ export async function extractJobContextAction(
 
         const remainingCredits = txResult.creditsAfter!;
 
-        // Run AI work AFTER credits have been deducted
+        // Run AI work AFTER credits have been deducted.
+        // Fail-closed: if the configured AI provider rejects or is missing,
+        // we refund the credit and surface the error. We do NOT fall back
+        // to keyword heuristics — that was the prior bug.
         let result: JobContextResult;
         try {
-            // In a real scenario, we would send this transcript to a high-reasoning model (Gemini 1.5 Pro)
-            // to infer the "vibe" and "hidden requirements".
-
-            // Simulating AI delay
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Mock Analysis based on transcript content (basic keyword heuristics for demo)
-            const isRemote = transcript.toLowerCase().includes('remote');
-            const isFastPaced = transcript.toLowerCase().includes('fast') || transcript.toLowerCase().includes('ship');
-            const isMentorship = transcript.toLowerCase().includes('mentor') || transcript.toLowerCase().includes('learn');
-
+            const aiResult = await extractJobContext({ transcript });
             result = {
-                cultureAnalysis: isFastPaced
-                    ? "High-velocity delivery environment. Values shipping over perfection. Suitable for self-starters."
-                    : "Structured, methodical engineering culture. Values correctness and stability.",
-
-                hiddenRequirements: [
-                    isRemote ? "Strong written communication skills (Async)" : "In-person collaboration capability",
-                    "Ability to navigate ambiguity",
-                    "Ownership mindset"
-                ],
-                teamDynamic: isMentorship
-                    ? "Collaborative, teaching-focused team structure."
-                    : "Senior-heavy, autonomous squad structure.",
-                recommendedKeywords: ["Agile", "Ownership", "System Design", "Communication"]
+                cultureAnalysis: aiResult.cultureAnalysis,
+                hiddenRequirements: aiResult.hiddenRequirements,
+                teamDynamic: aiResult.teamDynamic,
+                recommendedKeywords: aiResult.recommendedKeywords,
             };
         } catch (aiError) {
-            // AI failed — refund the credits
-            console.error("AI call failed, refunding credits:", aiError);
+            // AI failed — refund the credit and surface a useful message.
+            console.error("Job context AI call failed, refunding credit:", aiError);
             await userRef.update({
                 osCredits: FieldValue.increment(+CREDIT_COSTS.JOB_CONTEXT_EXTRACTION),
             });
-            return { success: false, error: "Failed to extract job context. Credits have been refunded." };
+            const message =
+                aiError instanceof Error
+                    ? aiError.message
+                    : "Unknown AI extraction failure.";
+            return {
+                success: false,
+                error: `Failed to extract job context: ${message} Your credit has been refunded.`,
+                remainingCredits: remainingCredits + CREDIT_COSTS.JOB_CONTEXT_EXTRACTION,
+            };
         }
 
         return { success: true, data: result, remainingCredits };
