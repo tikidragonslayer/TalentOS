@@ -24,6 +24,9 @@ export interface UserProfile {
     humanityScore?: number;
     justification: string;
   }[];
+  proofOfLearnCredentials?: ProofOfLearnCredential[];
+  proofOfLearnSyncedAt?: string;
+  proofOfLearnImportCount?: number;
   challengeResults?: {
     challengeId: string;
     skill: string;
@@ -46,6 +49,25 @@ export interface UserProfile {
   currentPeriodEnd?: string;
   osCredits: number;
   humanityScore?: number; // 0-100 (from Verification)
+}
+
+export interface ProofOfLearnCredential {
+  id: string;
+  title: string;
+  skill: string;
+  issuer: 'ProofOfLearn';
+  issuedAt: string;
+  subject: string;
+  objectiveId: string;
+  tier: string;
+  score: number;
+  proofLevel: 'signed-offchain' | 'solana-devnet';
+  integrityScore?: number;
+  verificationUrl?: string;
+  txSignature?: string;
+  stampCode?: string;
+  importedAt: string;
+  sourceTrust: 'signed' | 'origin-url';
 }
 
 export interface EmployerProfile {
@@ -157,6 +179,17 @@ export interface MatchScore {
   };
   justification: string;
   jobPostingSnapshot?: Partial<JobPosting>;
+  // Candidate-side public-safe snapshot written at match time.
+  // Employer-side UI reads this instead of cross-fetching /users/{uid}
+  // (which Firestore rules deny per Veiled Ventures anonymous-by-design).
+  candidateSnapshot?: {
+    anonymizedName?: string;
+    humanityScore?: number;
+    mbti?: { personalityType: string } | null;
+    skills?: string[];
+    profileTags?: string[];
+    proofOfLearnCredentials?: ProofOfLearnCredential[];
+  };
   feedback?: 'positive' | 'negative' | 'neutral' | null;
 }
 

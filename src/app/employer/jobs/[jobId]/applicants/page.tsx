@@ -19,20 +19,13 @@ import {
   ChevronUp,
   Users,
   Sparkles,
+  Award,
 } from "lucide-react";
-import type { MatchScore, UserProfile, Company } from "@/types";
+import type { MatchScore, Company } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { collection, query, where, doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { employerInitiateConversationAction } from "@/app/actions/conversation-actions";
-
-interface CandidateInfo {
-  anonymizedName: string;
-  humanityScore?: number;
-  mbti?: { personalityType: string } | null;
-  skills?: string[];
-  profileTags?: string[];
-}
 
 export default function ApplicantsPage() {
   const { authUser, profile, isLoading: isUserLoading, setRole } = useUser();
@@ -44,7 +37,6 @@ export default function ApplicantsPage() {
   const companyProfile = profile as Company | null;
 
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
-  const [candidateProfiles, setCandidateProfiles] = useState<Record<string, CandidateInfo>>({});
   const [isConnecting, setIsConnecting] = useState<string | null>(null);
   const [jobTitle, setJobTitle] = useState<string>("");
 
@@ -80,42 +72,10 @@ export default function ApplicantsPage() {
     fetchJob();
   }, [firestore, jobId]);
 
-  // Fetch candidate profiles for each match
-  useEffect(() => {
-    if (!firestore || !matches || matches.length === 0) return;
-
-    const fetchProfiles = async () => {
-      const profileMap: Record<string, CandidateInfo> = {};
-      const uniqueIds = [...new Set(matches.map((m) => m.userProfileId))];
-
-      for (const uid of uniqueIds) {
-        if (candidateProfiles[uid]) continue; // Already fetched
-        try {
-          const userDoc = await getDoc(doc(firestore, "users", uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data() as UserProfile;
-            profileMap[uid] = {
-              anonymizedName: data.anonymizedName || "Anonymous Candidate",
-              humanityScore: data.humanityScore,
-              mbti: data.mbti,
-              skills: data.skills,
-              profileTags: data.profileTags,
-            };
-          } else {
-            profileMap[uid] = { anonymizedName: "Anonymous Candidate" };
-          }
-        } catch {
-          profileMap[uid] = { anonymizedName: "Anonymous Candidate" };
-        }
-      }
-
-      if (Object.keys(profileMap).length > 0) {
-        setCandidateProfiles((prev) => ({ ...prev, ...profileMap }));
-      }
-    };
-
-    fetchProfiles();
-  }, [firestore, matches]);
+  // Candidate fields are denormalized into match.candidateSnapshot at write
+  // time (see src/app/actions/match-actions.ts). Reading /users/{uid} from
+  // here would always permission-deny per Veiled Ventures anonymous-by-design
+  // rules — and the snapshot already has everything this page renders.
 
   const handleStartConversation = async (match: MatchScore) => {
     if (!authUser) return;
@@ -244,7 +204,7 @@ export default function ApplicantsPage() {
       {/* Applicant Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {sortedMatches.map((match) => {
-          const candidate = candidateProfiles[match.userProfileId];
+          const candidate = match.candidateSnapshot;
           const isExpanded = expandedMatch === match.id;
 
           return (
@@ -287,6 +247,28 @@ export default function ApplicantsPage() {
                         +{candidate.skills.length - 6} more
                       </Badge>
                     )}
+                  </div>
+                )}
+
+                {candidate?.proofOfLearnCredentials && candidate.proofOfLearnCredentials.length > 0 && (
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-300">
+                        <Award className="h-3.5 w-3.5" />
+                        ProofOfLearn Evidence
+                      </p>
+                      <Badge variant="outline" className="border-emerald-500/30 text-[10px] text-emerald-300">
+                        {candidate.proofOfLearnCredentials.length} credential{candidate.proofOfLearnCredentials.length === 1 ? "" : "s"}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1.5">
+                      {candidate.proofOfLearnCredentials.slice(0, 3).map((credential) => (
+                        <div key={credential.id} className="flex items-center justify-between gap-2 text-[11px]">
+                          <span className="truncate text-gray-300">{credential.title}</span>
+                          <span className="shrink-0 text-emerald-300">{credential.score}/100</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 

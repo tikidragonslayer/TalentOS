@@ -113,6 +113,16 @@ export async function _matchCandidatesToJobInternal(
                             idealCandidateMbti: jobData.idealCandidateMbti,
                             bonusAmount: jobData.bonusAmount,
                         },
+                        // Public-safe candidate fields. Employer applicants page
+                        // reads this instead of fetching /users/{uid}.
+                        candidateSnapshot: {
+                            anonymizedName: candidateData.anonymizedName,
+                            humanityScore: candidateData.humanityScore,
+                            mbti: candidateData.mbti,
+                            skills: candidateData.skills,
+                            profileTags: candidateData.profileTags,
+                            proofOfLearnCredentials: candidateData.proofOfLearnCredentials,
+                        },
                     };
 
                     batch.set(matchRef, matchScore, { merge: true });
@@ -297,7 +307,17 @@ export async function scanForMatchesAction(idToken: string) {
                     anonymizedDescription: jobData.anonymizedDescription,
                     idealCandidateMbti: jobData.idealCandidateMbti,
                     bonusAmount: jobData.bonusAmount,
-                }
+                },
+                // Public-safe candidate fields. Employer applicants page
+                // reads this instead of fetching /users/{uid}.
+                candidateSnapshot: {
+                    anonymizedName: userProfile!.anonymizedName,
+                    humanityScore: userProfile!.humanityScore,
+                    mbti: userProfile!.mbti,
+                    skills: userProfile!.skills,
+                    profileTags: userProfile!.profileTags,
+                    proofOfLearnCredentials: userProfile!.proofOfLearnCredentials,
+                },
             };
 
             batch.set(matchRef, matchScore, { merge: true });
